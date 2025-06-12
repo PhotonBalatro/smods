@@ -1799,8 +1799,7 @@ function SMODS.GUI.dynamicModListContent(page)
             function(m) return m.can_load and not m.config_tab end,
             function(m) return m.disabled end,
         }) do
-            local display_id = 0
-            for mod_index, modInfo in ipairs(SMODS.mod_list) do
+            for _, modInfo in ipairs(SMODS.mod_list) do
                 if modCount >= modsRowPerPage * modsColPerRow then break end
                 if condition(modInfo) then
                     id = id + 1
@@ -1818,6 +1817,13 @@ function SMODS.GUI.dynamicModListContent(page)
                     end
                 end
             end
+        end
+        if #current_row > 0 then
+            table.insert(modNodes, {
+                n = G.UIT.R, 
+                config = { padding = 0, align = "lc"},
+                nodes = current_row
+            })
         end
     end
 
