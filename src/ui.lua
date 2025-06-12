@@ -978,7 +978,7 @@ function buildModtag(mod)
 end
 
 local function createTextColNode(text, scale, colour, node)
-    return { n = node or G.UIT.R, config = { padding = 0, align = "lc", maxw = 4.5, maxh = 1.5, }, nodes = { 
+    return { n = node or G.UIT.R, config = { padding = 0, align = "lc", maxw = 2.8, maxh = 1.5, }, nodes = { 
                 { n = G.UIT.T, config = { text = text, colour = colour or G.C.UI.TEXT_LIGHT, scale = scale * 0.7 } },
         }
     }
