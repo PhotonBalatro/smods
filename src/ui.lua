@@ -149,6 +149,45 @@ local function concatAuthors(authors)
     return authors or localize('b_unknown')
 end
 
+-- new concat but it trims to others
+function concatAuthorsTruncation(authors, len)
+    local w = ""
+    if type(authors) == "table" and #authors == 1 then authors = authors[1] end
+    if type(authors) == "string" then
+        
+        local names = {}
+        for name in authors:gmatch('[%s]*[^,]+[%s]*') do
+            table.insert(names,name)
+        end
+        if #names > 0 then
+            authors = names
+        end
+    end
+    if type(authors) == "table" then
+        for i, k in ipairs(authors) do
+            
+            if string.len(k) > len and i == 1 then
+                local x = ""
+                for name in string.gmatch(k,"%S+") do
+                    x = name
+                    break
+                end
+                k = x
+            end
+            local t = w..(i > 1 and ", " or "")..k
+            if ((string.len(t) <= len or i == 1)) then
+                w = t
+            elseif string.len(w .. localize('b_and_others')) > string.len(t) and i == #authors and #authors > 1 then
+                return t
+            else
+                return w .. localize('b_and_others')
+            end
+        end
+        return w
+    end
+    return authors or localize('b_unknown')
+end
+
 
 SMODS.LAST_SELECTED_MOD_TAB = "mod_desc"
 function create_UIBox_mods(args)
@@ -916,7 +955,7 @@ function buildModtag(mod)
                 end
                 tag_sprite.ability_UIBox_table = generate_card_ui({set = "Other", discovered = false, key = tag_message}, nil, specific_vars, 'Other', nil, false)
                 _self.config.h_popup =  G.UIDEF.card_h_popup(_self)
-                _self.config.h_popup_config ={align = 'cl', offset = {x=-0.1,y=0},parent = _self}
+                _self.config.h_popup_config ={align = 'tm', offset = {x= 0,y=-0.1},parent = _self}
                 Node.hover(_self)
                 if _self.children.alert then 
                     _self.children.alert:remove()
@@ -960,20 +999,14 @@ local function createClickableModBox(modInfo, scale)
     end
     
     if modInfo.can_load then
-        col = G.C.BOOSTER
-        bg_col = mix_colours({0.5,0.5,0.5,0.2},col,0.7)
+        col = mix_colours(G.C.BLACK, {0.7,0.8,0.9,1}, 0.6)
     elseif modInfo.disabled then
-        col = G.C.UI.BACKGROUND_INACTIVE
-        bg_col = mix_colours({0.5,0.5,0.5,0.2},col,0.7)
-    elseif G.SETTINGS.reduced_motion then
-        col = mix_colours(G.C.RED, G.C.UI.BACKGROUND_INACTIVE, 0.7)
-        bg_col = mix_colours({0.5,0.5,0.5,0.2},col,0.7)
-        text_col = G.C.TEXT_DARK
+        col = mix_colours(G.C.UI.BACKGROUND_INACTIVE, {0,0,0,1}, 0.6)
     else
-        col = SMODS.Gradients.warning_bg
-        bg_col = SMODS.Gradients.warning_bg_translucent
-        text_col = SMODS.Gradients.warning_text
+        col = G.C.RED
+        text_col = G.C.TEXT_DARK
     end
+    bg_col = mix_colours({0.5,0.5,0.5,0.2},col,0.5)
     local label_nodes = {}
     local modname_split = SMODS.smart_line_splitter(modInfo.name,18,true)
     for _,v in ipairs(modname_split) do
@@ -983,17 +1016,21 @@ local function createClickableModBox(modInfo, scale)
     version_col[4] = 0.6
     if modInfo.lovely_only then
         table.insert(label_nodes,createTextColNode(localize('b_lovely_mod'), scale, version_col))
-    else
-        --table.insert(label_nodes,createTextColNode(localize('b_by') .. concatAuthors(modInfo.author), scale * 0.7, mix_colours(G.C.BLACK, G.C.WHITE, 0.5)))
     end
     local sub_node_1 = {}
+    local under_checkbox_nodes = {}
     if modInfo.version and modInfo.version ~= '0.0.0' then
         table.insert(sub_node_1, createTextColNode(('%s'):format(modInfo.version), scale, version_col, G.UIT.C))
     end
     if modInfo.config_tab then
-        table.insert(sub_node_1, {
-            n = G.UIT.C,
-            config = { padding = 0.05 },
+        table.insert(under_checkbox_nodes, {
+            n = G.UIT.R,
+            config = { 
+                page = type(modInfo.config_tab) == "function" and "config",
+                padding = 0.1, 
+                align = "cm", 
+                colour = G.C.BLUE, 
+                button = "openModUI_" .. modInfo.id, shadow = true, shadow_height = 0.5, r = 0.1, hover = true },
             nodes = {
                 {
                     n = G.UIT.O,
@@ -1013,6 +1050,9 @@ local function createClickableModBox(modInfo, scale)
             nodes = sub_node_1
         })
     end
+    if not modInfo.lovely_only then
+        table.insert(label_nodes,createTextColNode(localize('b_by') .. concatAuthorsTruncation(modInfo.author, 12), scale, mix_colours(G.C.BLACK, G.C.WHITE, 0.5)))
+    end
     if not _RELEASE_MODE and modInfo.priority then
         table.insert(label_nodes, createTextColNode(('%s%s'):format(localize('b_priority'), number_format(modInfo.priority)), scale, version_col))
     end
@@ -1021,67 +1061,75 @@ local function createClickableModBox(modInfo, scale)
         n = G.UIT.C,
         config = { align = "cm", padding = 0.05 },
         nodes = {
-            { n = G.UIT.C, config = { padding = 0.1, align = "cm", colour = bg_col, r = 0.1, minw = 1.5, minh = 1},
+            { n = G.UIT.C, config = { padding = 0.05, align = "cm", colour = bg_col, r = 0.1, minw = 1.5, minh = 1},
                 nodes = {
+                    {
+                        n = G.UIT.C,
+                        config = { 
+                            padding = 0.1, 
+                            align = "lc", 
+                            button = "openModUI_" .. modInfo.id, 
+                            minw = 4.25, 
+                            minh = 1.4, 
+                            maxh = 1.4, 
+                            r = 0.1, 
+                            colour = col,
+                            shadow = true, 
+                            shadow_height = 0.5,
+                            hover = true,
+                        },
+                        nodes = {
+                            {
+                                n = G.UIT.C,
+                                config = { align = "cm" },
+                                nodes = {
+                                    buildModtag(modInfo),
+                                }
+                            },
+                            {
+                                n = G.UIT.C,
+                                config = { align = "lc",},
+                                nodes = label_nodes
+                            },
+                        }
+                    },
                     {
                         n = G.UIT.C,
                         config = { padding = 0.05, align = "cm"},
                         nodes = {
-                            create_toggle({
-                            label = '',
-                            ref_table = modInfo,
-                            ref_value = 'should_enable',
-                            col = true,
-                            hide_label = true,
-                            w = 0,
-                            h = 0.2,
-                            scale = 0.8,
-                            callback = (
-                                function(_set_toggle)
-                                    if not modInfo.should_enable then
-                                        NFS.write(modInfo.path .. '.lovelyignore', '')
-                                    else
-                                        NFS.remove(modInfo.path .. '.lovelyignore')
-                                    end
-                                    local toChange = 1
-                                    if modInfo.should_enable == not modInfo.disabled then
-                                        toChange = -1
-                                    end
-                                    SMODS.full_restart = SMODS.full_restart + toChange
-                                end)
-                            })
+                            {
+                                n = G.UIT.R,
+                                config = { align = "cm"},
+                                nodes = {
+                                    create_toggle({
+                                    label = '',
+                                    ref_table = modInfo,
+                                    ref_value = 'should_enable',
+                                    col = true,
+                                    hide_label = true,
+                                    w = 0,
+                                    h = 0.2,
+                                    scale = 1,
+                                    callback = (
+                                        function(_set_toggle)
+                                            if not modInfo.should_enable then
+                                                NFS.write(modInfo.path .. '.lovelyignore', '')
+                                            else
+                                                NFS.remove(modInfo.path .. '.lovelyignore')
+                                            end
+                                            local toChange = 1
+                                            if modInfo.should_enable == not modInfo.disabled then
+                                                toChange = -1
+                                            end
+                                            SMODS.full_restart = SMODS.full_restart + toChange
+                                        end)
+                                    })
+                                }
+                            },
+                            unpack(under_checkbox_nodes)
                         }
                     }
-                    ,{
-                    n = G.UIT.C,
-                    config = { 
-                        padding = 0.1, 
-                        align = "lc", 
-                        button = "openModUI_" .. modInfo.id, 
-                        minw = 4.25, 
-                        minh = 1.4, 
-                        maxh = 1.4, 
-                        r = 0.1, 
-                        colour = col, 
-                        shadow = true, 
-                        shadow_height = 0.5,
-                        hover = true,
-                    },
-                    nodes = {
-                        {
-                            n = G.UIT.C,
-                            config = { align = "cm" },
-                            nodes = {
-                                buildModtag(modInfo),
-                            }
-                        },
-                        {
-                            n = G.UIT.C,
-                            config = { align = "lc",},
-                            nodes = label_nodes
-                        },
-                    }
-                }}
+                }
             }
         }
     }
@@ -1635,7 +1683,7 @@ function SMODS.GUI.DynamicUIManager.updateDynamicAreas(uiDefinitions)
             dynamicArea.config.object:remove()
             dynamicArea.config.object = UIBox{
                 definition = uiDefinition,
-                config = {offset = {x=0, y=0.3}, align = 'cm', parent = dynamicArea}
+                config = {offset = {x=0, y=0.5}, align = 'cm', parent = dynamicArea}
             }
         end
     end
@@ -1735,7 +1783,7 @@ function SMODS.GUI.staticModListContent()
                                 config = {
                                     padding = 0.05,
                                     align = "cm",
-                                    minh = 5.4,
+                                    minh = 5,
                                     minw = 5
                                 },
                                 nodes = {

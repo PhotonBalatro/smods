@@ -260,6 +260,7 @@ G.E_MANAGER:add_event(Event({ --Add bonus chips from this card
                     blockable = blockable,
 '''
 match_indent = true
+
 [[patches]]
 [patches.pattern]
 target = "functions/UI_definitions.lua"
