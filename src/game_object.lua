@@ -3474,6 +3474,11 @@ Set `prefix_config.key = false` on your object instead.]]):format(obj.key), obj.
         colours = { G.C.WHITE, G.C.RED },
         cycle = 1,
     }
+    SMODS.Gradient {
+        key = 'warning_bg_translucent',
+        colours = { mix_colours({.5,.5,.5,.2},G.C.RED,.7), mix_colours({.5,.5,.5,.2},G.C.GREEN,.7) },
+        cycle = 1,
+    }
 
 
     -------------------------------------------------------------------------------------------------
