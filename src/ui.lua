@@ -1023,14 +1023,15 @@ local function createClickableModBox(modInfo, scale)
         table.insert(sub_node_1, createTextColNode(('%s'):format(modInfo.version), scale, version_col, G.UIT.C))
     end
     if modInfo.config_tab then
+        local is_config_func = type(modInfo.config_tab) == "function"
         table.insert(under_checkbox_nodes, {
             n = G.UIT.R,
             config = { 
-                page = type(modInfo.config_tab) == "function" and "config",
+                page = is_config_func and "config",
                 padding = 0.1, 
                 align = "cm", 
-                colour = G.C.BLUE, 
-                button = "openModUI_" .. modInfo.id, shadow = true, shadow_height = 0.5, r = 0.1, hover = true },
+                colour = is_config_func and G.C.BLUE, 
+                button = is_config_func and ("openModUI_" .. modInfo.id), shadow = is_config_func, shadow_height = 0.5, r = 0.1, hover = is_config_func },
             nodes = {
                 {
                     n = G.UIT.O,
@@ -1051,7 +1052,33 @@ local function createClickableModBox(modInfo, scale)
         })
     end
     if not modInfo.lovely_only then
-        table.insert(label_nodes,createTextColNode(localize('b_by') .. concatAuthorsTruncation(modInfo.author, 12), scale, mix_colours(G.C.BLACK, G.C.WHITE, 0.5)))
+        local tx = localize('b_by') .. concatAuthors(modInfo.author, 12)
+        local the_colour = mix_colours(G.C.BLACK, G.C.WHITE, 0.2)
+        the_colour[4] = 0.8
+        local authorDynatext = DynaText{
+            string = tx,
+            scale = scale * 0.7,
+            colours = {the_colour},
+            shadow = true,
+            maxw = 3.1,
+            non_recalc = true,
+            does_scroll = true,
+        }
+        table.insert(label_nodes,
+            { n = G.UIT.R, config = { padding = 0, align = "lc", maxw = 4.5, maxh = 1.5, }, nodes = { 
+                {
+                    n = G.UIT.O, config = {object = authorDynatext}
+                }
+            }
+        })
+        authorDynatext.config.stencil = function() 
+            love.graphics.rectangle(
+                "fill", 
+                authorDynatext.T.x * G.TILESIZE * G.TILESCALE,
+                authorDynatext.T.y * G.TILESIZE * G.TILESCALE, 
+                authorDynatext.config.maxw * G.TILESIZE * G.TILESCALE,
+                10 * G.TILESIZE * G.TILESCALE
+        ) end
     end
     if not _RELEASE_MODE and modInfo.priority then
         table.insert(label_nodes, createTextColNode(('%s%s'):format(localize('b_priority'), number_format(modInfo.priority)), scale, version_col))
