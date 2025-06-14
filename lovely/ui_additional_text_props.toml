@@ -232,9 +232,19 @@ match_indent = true
 [patches.pattern]
 target = 'engine/text.lua'
 pattern = '''    if self.shadow then'''
-position = "after"
+position = "before"
 payload = '''
 love.graphics.push()
+'''
+match_indent = true
+
+
+[[patches]]
+[patches.pattern]
+target = 'engine/text.lua'
+pattern = '''    if self.shadow then'''
+position = "after"
+payload = '''
 love.graphics.translate(self.scrolling or 0,0)
 '''
 match_indent = true
