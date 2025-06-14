@@ -1060,7 +1060,7 @@ local function createClickableModBox(modInfo, scale)
             scale = scale * 0.7,
             colours = {the_colour},
             shadow = true,
-            maxw = 3.1,
+            maxw = 2.7,
             non_recalc = true,
             does_scroll = true,
         }

@@ -79,6 +79,7 @@ position = "at"
 payload = '''(node.config.font or node.config.lang.font)'''
 line_prepend = "$indent"
 
+
 # Fix name scale when using formatting
 [[patches]]
 [patches.pattern]
@@ -190,8 +191,7 @@ end
 target = 'engine/text.lua'
 pattern = '''    if self.children.particle_effect then self.children.particle_effect:draw() end'''
 position = "after"
-payload = ''' -- hehe...
-if self.config and self.config.stencil then
+payload = '''if self.config and self.config.stencil then
     love.graphics.stencil(self.config.stencil, self.config.stencil_mode or "replace", 1)
     love.graphics.setStencilTest((self.config.stencil_test or "greater"), self.config.stencil_value or 0)
 end
@@ -207,7 +207,7 @@ position = "after"
 payload = '''
 love.graphics.setStencilTest()
 love.graphics.pop()
-if (self.total_width * 0.5) > (self.config.maxw or 0) and self.config.does_scroll then
+if (self.total_width) > ((self.config.maxw or 0)) and self.config.does_scroll then
     local sinewave = (math.tanh(1.5*math.sin((G.TIMERS.REAL - self.created_time) / (self.total_width * 0.35)))) / math.tanh(1.5)
     self.scrolling = -(sinewave + 1) * ((self.total_width - (self.config.maxw or 0) + 0.1) * G.TILESIZE * G.TILESCALE * 0.5) 
 end
