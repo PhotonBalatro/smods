@@ -636,6 +636,49 @@ local function initializeModUIFunctions()
             })
         end
     end
+    -- NOTE TO SELF
+    -- THIS IS A BAD IDEA, YOU NEED TO DO IT LIKE ABOVE TO REGISTER CONFLICTS AND STUFF
+    G.FUNCS.openModManagement = function(e)
+        G.FUNCS.overlay_menu{
+            definition = create_UIBox_mod_management(e),
+            -- config = {align='cm', major = G.ROOM_ATTACH, bond = 'Strong'},
+            -- pause = true
+        }
+    end
+
+    
+    create_UIBox_mod_management = function(e)
+        print("test")
+        print(e.config.ref_table.mod.name)
+        local mod = e
+        return create_UIBox_generic_options({
+            colour = (mod.ui_config or {}).colour,
+            bg_colour = (mod.ui_config or {}).bg_colour,
+            back_colour = (mod.ui_config or {}).back_colour,
+            outline_colour = (mod.ui_config or {}).outline_colour,
+            back_func = "mods_button",
+            contents = {
+                {
+                    n=G.UIT.R, 
+                    config = {
+                        align = 'cm', 
+                        r = 0.1, 
+                        colour = G.C.L_BLACK
+                    },
+                    nodes = {
+                        {
+                            n = G.UIT.T,
+                            config = {
+                                text = "Ouch!", 
+                                colour = G.C.RED, 
+                                scale = 0.6
+                            }
+                        }
+                    }
+                }
+            }
+        })
+    end
 end
 
 local function checkForLoadFailure()
