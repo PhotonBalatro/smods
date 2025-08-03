@@ -215,6 +215,57 @@ function create_UIBox_mods(args)
         end
     end
 
+    local man_id = "manage"
+    local man_menu = function()
+        --- This function creates the "Manage" tab in the mod menu
+        --- If you're seeing this in ui.lua, I successfully wrote efficient code
+        --- If you're seeing this in loader.lua, I am incompetent
+        --- If you're seeing this elsewhere, I have officially lost it
+        local col_conf = { colour = G.C.UI.BACKGROUND_DARK, minh = 2, minw = 2, r = 1 }
+
+        local conflict_col = { n = G.UIT.C, config = col_conf, nodes = {}}
+        if mod.dependencies then 
+            for i, v in ipairs(mod.dependencies) do
+                print(i.."")
+                print(v.."")
+                print("loop")
+            end
+        else
+            print("no dependencies")
+        end
+        print("test")
+
+        return {
+            n = G.UIT.ROOT,
+            config = {
+                emboss = 0.05,
+                minh = 6,
+                minw = 2,
+                r = 0.1,
+                align = "cm",
+                padding = 0.2,
+                colour = G.C.DYN_UI.DARK
+            },
+            nodes = {
+                {
+                    n = G.UIT.C, 
+                    config = {align = "cm"}, 
+                    nodes = {
+                        {
+                            n=G.UIT.R, 
+                            config = {align = "cm", padding = 0.2},
+                            nodes = {
+                                
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    end
+    local man_tab = { label = "Manage", chosen = (SMODS.LAST_SELECTED_MOD_TAB == man_id) or false, tab_definition_function = man_menu }
+    table.insert(mod_tabs, man_tab)
+
     return (create_UIBox_generic_options({
         colour = (mod.ui_config or {}).colour,
         bg_colour = (mod.ui_config or {}).bg_colour,
@@ -989,26 +1040,23 @@ local function createClickableModBox(modInfo, scale)
     if modInfo.version and modInfo.version ~= '0.0.0' then
         table.insert(sub_node_1, createTextColNode(('%s'):format(modInfo.version), scale, version_col, G.UIT.C))
     end
-    if modInfo.config_tab then
-        local is_config_func = type(modInfo.config_tab) == "function"
         table.insert(under_checkbox_nodes, {
-            n = G.UIT.R,
-            config = { 
-                page = is_config_func and "config",
-                padding = 0.1, 
-                align = "cm", 
-                colour = is_config_func and G.C.BLUE, 
-                button = is_config_func and ("openModUI_" .. modInfo.id), shadow = is_config_func, shadow_height = 0.5, r = 0.1, hover = is_config_func },
-            nodes = {
-                {
-                    n = G.UIT.O,
-                    config = {
-                        object = Sprite(0,0,0.3,0.3, G.ASSET_ATLAS['mod_tags'], {x=2,y=0})
-                    }
+        n = G.UIT.R,
+        config = { 
+            page = "manage",
+            padding = 0.1, 
+            align = "cm", 
+            colour = G.C.BLUE, 
+            button = ("openModUI_" .. modInfo.id), shadow = true, shadow_height = 0.5, r = 0.1, hover = true },
+        nodes = {
+            {
+                n = G.UIT.O,
+                config = {
+                    object = Sprite(0,0,0.3,0.3, G.ASSET_ATLAS['mod_tags'], {x=2,y=0})
                 }
             }
-        })
-    end
+        }
+    })
     if #sub_node_1 > 0 then
         table.insert(label_nodes, {
             n = G.UIT.R,
