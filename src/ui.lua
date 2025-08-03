@@ -152,6 +152,7 @@ end
 
 SMODS.LAST_SELECTED_MOD_TAB = "mod_desc"
 function create_UIBox_mods(args)
+    ---@type Mod
     local mod = G.ACTIVE_MOD_UI
     if not SMODS.LAST_SELECTED_MOD_TAB then SMODS.LAST_SELECTED_MOD_TAB = "mod_desc" end
 
@@ -221,26 +222,55 @@ function create_UIBox_mods(args)
         --- If you're seeing this in ui.lua, I successfully wrote efficient code
         --- If you're seeing this in loader.lua, I am incompetent
         --- If you're seeing this elsewhere, I have officially lost it
-        local col_conf = { colour = G.C.UI.BACKGROUND_DARK, minh = 2, minw = 2, r = 1 }
 
-        local conflict_col = { n = G.UIT.C, config = col_conf, nodes = {}}
-        if mod.dependencies then 
-            for i, v in ipairs(mod.dependencies) do
-                print(i.."")
-                print(v.."")
-                print("loop")
-            end
-        else
-            print("no dependencies")
+        local cols = {}
+        local add_text_node = function(node, text, scale)
+            print(scale)
+            scale = scale or 0.3
+            print(scale)
+            table.insert(node.nodes, 
+            {
+                n = G.UIT.R,
+                config = { align = "cm"},
+                nodes = {
+                    {
+                        n = G.UIT.O, 
+                        config={
+                            object = DynaText({string = text, colours = {G.C.WHITE}, shadow = true, scale = scale})
+                        }
+                    }
+                }
+            })
         end
-        print("test")
+
+        local create_col = function(data, entry, title)
+            data = data or {}
+            title = title or "MISSING"
+            local col = { n = G.UIT.C, config = { colour = G.C.UI.BACKGROUND_DARK, minh = 2, minw = 3, r = 1, padding = 0.2, align = "tm" }, nodes = {}}
+            local title_size = 0.5
+            print("Adding title")
+            add_text_node(col, title, title_size)
+            if data and next(data) ~= nil then 
+                print("Looping")
+                for i, v in ipairs(data) do
+                    if entry then v = v[entry] end
+                    add_text_node(col, v)
+                end
+            else
+                add_text_node(col, "None")
+            end
+            table.insert(cols, col)
+        end
+
+        create_col(mod.dependencies, "str", "Dependencies")
+        create_col(mod.conflicts, "str", "Conflicts")
+        
 
         return {
             n = G.UIT.ROOT,
             config = {
                 emboss = 0.05,
-                minh = 6,
-                minw = 2,
+                minw = 4,
                 r = 0.1,
                 align = "cm",
                 padding = 0.2,
@@ -253,10 +283,8 @@ function create_UIBox_mods(args)
                     nodes = {
                         {
                             n=G.UIT.R, 
-                            config = {align = "cm", padding = 0.2},
-                            nodes = {
-                                
-                            }
+                            config = {align = "tm", padding = 0.2},
+                            nodes = cols
                         }
                     }
                 }
