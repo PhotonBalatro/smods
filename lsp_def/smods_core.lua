@@ -25,6 +25,7 @@ SMODS.path = ""
 ---@field dump_loc? true Dumps G.localization table into this mod's directory.
 ---@field dependencies? string[] All mods in this array must be installed and loaded for this mod to load.
 ---@field conflicts? table[] No mods in this array can be installed for this mod to load.
+---@field dependants? string[] Array of mods that require this mod to be installed to load.
 ---@field provides? table[] If any of the mods in this array are not installed or loaded, this mod will act as a stand in.
 ---@field main_file? string Path to the main .lua file of this mod.
 ---@field config_file? string Path to the config file of this mod. Defaults to "config.lua" if not provided.

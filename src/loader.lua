@@ -570,6 +570,17 @@ function loadMods(modsDirectory)
                     SMODS.load_mod_config(mod)
                     assert(load(NFS.read(mod.path..mod.main_file), ('=[SMODS %s "%s"]'):format(mod.id, mod.main_file)))()
                 end
+
+                if mod.dependencies then
+                    for i, v in ipairs(mod.dependencies) do
+                        local id = v.id or v[1].id or nil
+                        if not id then sendWarnMessage("Can't find dependency ID for mod: "..mod.id) return end
+                        local other_mod = SMODS.Mods[id]
+                        if not other_mod.dependants then other_mod.dependants = {} end
+                        table.insert(other_mod.dependants, mod.id)
+                    end
+                end
+
                 SMODS.current_mod = nil
             elseif not mod.lovely_only then
                 sendTraceMessage(string.format("Mod %s was unable to load: %s%s%s%s", mod.id,

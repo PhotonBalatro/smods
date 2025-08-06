@@ -225,9 +225,7 @@ function create_UIBox_mods(args)
 
         local cols = {}
         local add_text_node = function(node, text, scale)
-            print(scale)
             scale = scale or 0.3
-            print(scale)
             table.insert(node.nodes, 
             {
                 n = G.UIT.R,
@@ -248,10 +246,11 @@ function create_UIBox_mods(args)
             title = title or "MISSING"
             local col = { n = G.UIT.C, config = { colour = G.C.UI.BACKGROUND_DARK, minh = 2, minw = 3, r = 1, padding = 0.2, align = "tm" }, nodes = {}}
             local title_size = 0.5
-            print("Adding title")
+            
             add_text_node(col, title, title_size)
+
             if data and next(data) ~= nil then 
-                print("Looping")
+                print(data)
                 for i, v in ipairs(data) do
                     if entry then v = v[entry] end
                     add_text_node(col, v)
@@ -264,6 +263,7 @@ function create_UIBox_mods(args)
 
         create_col(mod.dependencies, "str", "Dependencies")
         create_col(mod.conflicts, "str", "Conflicts")
+        create_col(mod.dependants, nil, "Dependants")
         
 
         return {
