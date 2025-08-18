@@ -1707,23 +1707,27 @@ end
 G.FUNCS.confirm_disable_all = function(e)
     -- Disable all mods
     for _, mod in ipairs(SMODS.mod_list) do
-        mod.should_enable = false
-        NFS.write(mod.path .. '.lovelyignore', '')
+        if not mod.locked then 
+            mod.should_enable = false
+            NFS.write(mod.path .. '.lovelyignore', '')
+        end
     end
     
-    SMODS.full_restart = 1
-    G.FUNCS.exit_mods(e)
+    -- SMODS.full_restart = 1
+    -- G.FUNCS.exit_mods(e)
 end
 
 G.FUNCS.confirm_enable_all = function(e)
-    -- Enable all mods
+    -- Disable all mods
     for _, mod in ipairs(SMODS.mod_list) do
-        mod.should_enable = true
-        NFS.remove(mod.path .. '.lovelyignore')
+        if not mod.locked then 
+            mod.should_enable = true
+            NFS.remove(mod.path .. '.lovelyignore')
+        end
     end
     
-    SMODS.full_restart = 1
-    G.FUNCS.exit_mods(e)
+    -- SMODS.full_restart = 1
+    -- G.FUNCS.exit_mods(e)
 end
 
 G.FUNCS.confirm_reload_all = function(e)
@@ -2025,6 +2029,33 @@ end
 function SMODS.GUI.staticModListContent()
     local scale = 0.75
     local currentPage, pageOptions, showingList = recalculateModsList()
+
+
+    -- Helper functions to wrap the given nodes in a column/node respectively - these honestly should be adapted into global functions
+    local row = function(nodes)
+        return {
+                n = G.UIT.R,
+                config = { align = "cm" },
+                nodes = nodes
+            }
+        end
+    local col = function(nodes)
+        return {
+                n = G.UIT.C,
+                config = { align = "cm" },
+                nodes = nodes
+            }
+        end
+
+    -- Helper function for all the random padding nodes I noticed
+    local pad = function(padding)
+        return({
+                n = G.UIT.R,
+                config = { align = "cm", padding = padding or 0.05 },
+                nodes = {}
+            })
+        end
+
     return {
         n = G.UIT.R,
         config = {
@@ -2044,13 +2075,7 @@ function SMODS.GUI.staticModListContent()
                         n = G.UIT.C,
                         config = { align = "cm", minw = 5, padding = 0.05, r = 0.1, colour = G.C.CLEAR },
                         nodes = {
-                            {
-                                n = G.UIT.R,
-                                config = {
-                                    padding = 0.05,
-                                    align = "cm"
-                                },
-                            },
+                            pad(),
                             {
                                 n = G.UIT.R,
                                 config = {
@@ -2074,7 +2099,8 @@ function SMODS.GUI.staticModListContent()
                                                         scale = 0.35,
                                                         spacing = 0.8,
                                                         shadow = true,
-                                                        pop_in = 0.1
+                                                        pop_in = 0.1,
+                                                        silent = true
                                                     })
                                                 }
                                             }
@@ -2082,26 +2108,10 @@ function SMODS.GUI.staticModListContent()
                                     }
                                 }
                             },
-                            {
-                                n = G.UIT.R,
-                                config = { align = "cm", padding = 0.05 },
-                                nodes = {}
-                            },
-                            {
-                                n = G.UIT.R,
-                                config = { align = "cm", padding = 0.05 },
-                                nodes = {}
-                            },
-                            {
-                                n = G.UIT.R,
-                                config = { align = "cm", padding = 0.05 },
-                                nodes = {}
-                            },
-                            {
-                                n = G.UIT.R,
-                                config = { align = "cm", padding = 0.05 },
-                                nodes = {}
-                            },
+                            pad(),
+                            pad(),
+                            pad(),
+                            pad(), 
                             {
                                 n = G.UIT.R,
                                 config = {
@@ -2114,12 +2124,39 @@ function SMODS.GUI.staticModListContent()
                                     {n=G.UIT.O, config={align = "cm", id = 'modsList', object = Moveable()}},
                                 }
                             },
+                            pad(0.8),
                             {
                                 n = G.UIT.R,
-                                config = { align = "cm", padding = 0.8 },
-                                nodes = {}
+                                config = { align = "cm", padding = 0.3 },
+                                nodes = {row({
+                                    col({UIBox_button({
+                                        minw = 3,
+                                        button = "confirm_disable_all",
+                                        label = {"Disable All Mods"},
+                                        colour = G.C.RED,
+                                        scale = 0.6
+                                    })}),
+                                    col({
+                                        showingList and SMODS.GUI.createOptionSelector({
+                                                label = "", 
+                                                scale = 0.8,
+                                                padding = 0.2, 
+                                                options = pageOptions, 
+                                                opt_callback = 'update_mod_list', 
+                                                no_pips = true, 
+                                                current_option = currentPage
+                                            }) or nil
+                                    }),
+                                    col({UIBox_button({
+                                        minw = 3,
+                                        button = "confirm_enable_all",
+                                        label = {"Enable All Mods"},
+                                        colour = G.C.GREEN,
+                                        scale = 0.6
+                                    })})
+                                })
+                                }
                             },
-                            showingList and SMODS.GUI.createOptionSelector({label = "", scale = 0.8, options = pageOptions, opt_callback = 'update_mod_list', no_pips = true, current_option = currentPage}) or nil
                         }
                     },
                 }
