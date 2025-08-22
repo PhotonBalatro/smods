@@ -1308,93 +1308,93 @@ function create_UIBox_mods_button()
                                     })
                                 end
                             },
-                            {
-                                label = "Manage", -- New Manage tab
-                                tab_definition_function = function()
-                                    return {
-                                        n = G.UIT.ROOT,
-                                        config = {
-                                            emboss = 0.05,
-                                            minh = 6,
-                                            r = 0.1,
-                                            minw = 6,
-                                            align = "cm",
-                                            padding = 0.2,
-                                            colour = G.C.BLACK
-                                        },
-                                        nodes = {
-                                            -- Disable All Mods button
-                                            {
-                                                n = G.UIT.R,
-                                                config = {
-                                                    padding = 0.2,
-                                                    align = "cm"
-                                                },
-                                                nodes = {
-                                                    UIBox_button({
-                                                        minw = 4,
-                                                        button = "disable_all_mods",
-                                                        label = {"Disable All Mods"},
-                                                        colour = G.C.RED,
-                                                        scale = 0.8
-                                                    })
-                                                }
-                                            },
-                                            -- Enable All Mods button
-                                            {
-                                                n = G.UIT.R,
-                                                config = {
-                                                    padding = 0.2,
-                                                    align = "cm"
-                                                },
-                                                nodes = {
-                                                    UIBox_button({
-                                                        minw = 4,
-                                                        button = "enable_all_mods",
-                                                        label = {"Enable All Mods"},
-                                                        colour = G.C.GREEN,
-                                                        scale = 0.8
-                                                    })
-                                                }
-                                            },
-                                            -- Open Mods Directory button (removed the one in the mods tab)
-                                            {
-                                                n = G.UIT.R,
-                                                config = {
-                                                    padding = 0.2,
-                                                    align = "cm"
-                                                },
-                                                nodes = {
-                                                    UIBox_button({
-                                                        minw = 4,
-                                                        button = "openModsDirectory",
-                                                        label = {"Open Mods Folder"},
-                                                        colour = G.C.BOOSTER,
-                                                        scale = 0.8
-                                                    })
-                                                }
-                                            },
-                                            -- Reload Mods button
-                                            {
-                                                n = G.UIT.R,
-                                                config = {
-                                                    padding = 0.2,
-                                                    align = "cm"
-                                                },
-                                                nodes = {
-                                                    UIBox_button({
-                                                        minw = 4,
-                                                        button = "reload_all_mods",
-                                                        label = {"Reload All Mods"},
-                                                        colour = G.C.BLUE,
-                                                        scale = 0.8
-                                                    })
-                                                }
-                                            }
-                                        }
-                                    }
-                                end
-                            },
+                            -- {
+                            --     label = "Manage", -- New Manage tab
+                            --     tab_definition_function = function()
+                            --         return {
+                            --             n = G.UIT.ROOT,
+                            --             config = {
+                            --                 emboss = 0.05,
+                            --                 minh = 6,
+                            --                 r = 0.1,
+                            --                 minw = 6,
+                            --                 align = "cm",
+                            --                 padding = 0.2,
+                            --                 colour = G.C.BLACK
+                            --             },
+                            --             nodes = {
+                            --                 -- Disable All Mods button
+                            --                 {
+                            --                     n = G.UIT.R,
+                            --                     config = {
+                            --                         padding = 0.2,
+                            --                         align = "cm"
+                            --                     },
+                            --                     nodes = {
+                            --                         UIBox_button({
+                            --                             minw = 4,
+                            --                             button = "disable_all_mods",
+                            --                             label = {"Disable All Mods"},
+                            --                             colour = G.C.RED,
+                            --                             scale = 0.8
+                            --                         })
+                            --                     }
+                            --                 },
+                            --                 -- Enable All Mods button
+                            --                 {
+                            --                     n = G.UIT.R,
+                            --                     config = {
+                            --                         padding = 0.2,
+                            --                         align = "cm"
+                            --                     },
+                            --                     nodes = {
+                            --                         UIBox_button({
+                            --                             minw = 4,
+                            --                             button = "enable_all_mods",
+                            --                             label = {"Enable All Mods"},
+                            --                             colour = G.C.GREEN,
+                            --                             scale = 0.8
+                            --                         })
+                            --                     }
+                            --                 },
+                            --                 -- Open Mods Directory button (removed the one in the mods tab)
+                            --                 {
+                            --                     n = G.UIT.R,
+                            --                     config = {
+                            --                         padding = 0.2,
+                            --                         align = "cm"
+                            --                     },
+                            --                     nodes = {
+                            --                         UIBox_button({
+                            --                             minw = 4,
+                            --                             button = "openModsDirectory",
+                            --                             label = {"Open Mods Folder"},
+                            --                             colour = G.C.BOOSTER,
+                            --                             scale = 0.8
+                            --                         })
+                            --                     }
+                            --                 },
+                            --                 -- Reload Mods button
+                            --                 {
+                            --                     n = G.UIT.R,
+                            --                     config = {
+                            --                         padding = 0.2,
+                            --                         align = "cm"
+                            --                     },
+                            --                     nodes = {
+                            --                         UIBox_button({
+                            --                             minw = 4,
+                            --                             button = "reload_all_mods",
+                            --                             label = {"Reload All Mods"},
+                            --                             colour = G.C.BLUE,
+                            --                             scale = 0.8
+                            --                         })
+                            --                     }
+                            --                 }
+                            --             }
+                            --         }
+                            --     end
+                            -- },
                             {
                                 label = localize('b_credits'),
                                 tab_definition_function = function()
@@ -2032,28 +2032,19 @@ function SMODS.GUI.staticModListContent()
 
 
     -- Helper functions to wrap the given nodes in a column/node respectively - these honestly should be adapted into global functions
-    local row = function(nodes)
+    local row = function(nodes, config)
         return {
                 n = G.UIT.R,
-                config = { align = "cm" },
+                config = config or { align = "cm" },
                 nodes = nodes
             }
         end
-    local col = function(nodes)
+    local col = function(nodes, config)
         return {
                 n = G.UIT.C,
-                config = { align = "cm" },
+                config = config or { align = "cm" },
                 nodes = nodes
             }
-        end
-
-    -- Helper function for all the random padding nodes I noticed
-    local pad = function(padding)
-        return({
-                n = G.UIT.R,
-                config = { align = "cm", padding = padding or 0.05 },
-                nodes = {}
-            })
         end
 
     return {
@@ -2075,15 +2066,24 @@ function SMODS.GUI.staticModListContent()
                         n = G.UIT.C,
                         config = { align = "cm", minw = 5, padding = 0.05, r = 0.1, colour = G.C.CLEAR },
                         nodes = {
-                            pad(),
                             {
+                                n = G.UIT.R,
+                                config = { align = "cm", padding = 0.05 },
+                                nodes = {}
+                            },
+                            {
+                                -- Mod counter/open folder button at top
                                 n = G.UIT.R,
                                 config = {
                                     padding = 0.05,
                                     align = "cm",
                                     r = 0.1,
                                     colour = G.C.BOOSTER,
-                                    id = 'mod_count_display'
+                                    id = 'mod_count_display', 
+                                    button = "openModsDirectory", 
+                                    shadow = true, 
+                                    shadow_height = 0.5, 
+                                    hover = true
                                 },
                                 nodes = {
                                     {
@@ -2108,10 +2108,26 @@ function SMODS.GUI.staticModListContent()
                                     }
                                 }
                             },
-                            pad(),
-                            pad(),
-                            pad(),
-                            pad(), 
+                            {
+                                n = G.UIT.R,
+                                config = { align = "cm", padding = 0.05 },
+                                nodes = {}
+                            },
+                            {
+                                n = G.UIT.R,
+                                config = { align = "cm", padding = 0.05 },
+                                nodes = {}
+                            },
+                            {
+                                n = G.UIT.R,
+                                config = { align = "cm", padding = 0.05 },
+                                nodes = {}
+                            },
+                            {
+                                n = G.UIT.R,
+                                config = { align = "cm", padding = 0.05 },
+                                nodes = {}
+                            }, 
                             {
                                 n = G.UIT.R,
                                 config = {
@@ -2121,21 +2137,31 @@ function SMODS.GUI.staticModListContent()
                                     minw = 5
                                 },
                                 nodes = {
+                                    -- The 3x4 mod list area
                                     {n=G.UIT.O, config={align = "cm", id = 'modsList', object = Moveable()}},
                                 }
                             },
-                            pad(0.8),
                             {
                                 n = G.UIT.R,
-                                config = { align = "cm", padding = 0.3 },
-                                nodes = {row({
-                                    col({UIBox_button({
-                                        minw = 3,
-                                        button = "confirm_disable_all",
-                                        label = {"Disable All Mods"},
-                                        colour = G.C.RED,
-                                        scale = 0.6
-                                    })}),
+                                config = { align = "cm", padding = 0.8 },
+                                nodes = {}
+                            },
+                            row(
+                                {row({
+                                    col({
+                                        UIBox_button({
+                                            minw = 3,
+                                            button = "confirm_disable_all",
+                                            label = {"Disable All Mods"},
+                                            colour = G.C.RED,
+                                            scale = 0.6
+                                        })},
+                                        {align = "bm"}
+                                    ),
+
+                                    -- Horizontal spacing columns
+                                    col({}, {minw = 0.8}),
+
                                     col({
                                         showingList and SMODS.GUI.createOptionSelector({
                                                 label = "", 
@@ -2146,17 +2172,22 @@ function SMODS.GUI.staticModListContent()
                                                 no_pips = true, 
                                                 current_option = currentPage
                                             }) or nil
-                                    }),
+                                    },
+                                    {minh = 0.5, align = "tm"}),
+
+                                    col({}, {minw = 0.8}),
+
                                     col({UIBox_button({
                                         minw = 3,
                                         button = "confirm_enable_all",
                                         label = {"Enable All Mods"},
                                         colour = G.C.GREEN,
                                         scale = 0.6
-                                    })})
+                                    })},
+                                    {align = "bm"})
                                 })
-                                }
-                            },
+                                },
+                            { align = "cm", padding = 0.1 }),
                         }
                     },
                 }
