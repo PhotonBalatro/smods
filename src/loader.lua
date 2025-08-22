@@ -607,6 +607,9 @@ function loadMods(modsDirectory)
             return ret
         end
     end
+    print(SMODS.config)
+    if not SMODS.config.locked_mods then SMODS.config.locked_mods = {} print("doesnt exist!") end
+    if not SMODS.config.pinned_mods then SMODS.config.pinned_mods = {} end
 end
 
 function SMODS.injectItems()

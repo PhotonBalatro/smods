@@ -249,8 +249,7 @@ function create_UIBox_mods(args)
             
             add_text_node(col, title, title_size)
 
-            if data and next(data) ~= nil then 
-                print(data)
+            if data and next(data) ~= nil then
                 for i, v in ipairs(data) do
                     if entry then v = v[entry] end
                     add_text_node(col, v)
@@ -1163,6 +1162,29 @@ local function createClickableModBox(modInfo, scale)
                     },
                     {
                         n = G.UIT.C,
+                        config = { padding = 0.05, align = "bm"},
+                        nodes = {
+                            {
+                                n = G.UIT.R,
+                                config = { 
+                                    page = "manage",
+                                    padding = 0.1, 
+                                    align = "cm", 
+                                    colour = G.C.BLUE, 
+                                    button = "lock_mod", ref_table = SMODS.config.locked_mods, ref_value = modInfo.id, shadow = true, shadow_height = 0.5, r = 0.1, hover = true },
+                                nodes = {
+                                    {
+                                        n = G.UIT.O,
+                                        config = {
+                                            object = Sprite(0,0,0.3,0.3, G.ASSET_ATLAS['mod_tags'], {x=2,y=0})
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        n = G.UIT.C,
                         config = { padding = 0.05, align = "cm"},
                         nodes = {
                             {
@@ -1212,6 +1234,14 @@ function G.FUNCS.mods_buttons_page(options)
     if not options or not options.cycle_config then
         return
     end
+end
+
+function G.FUNCS.lock_mod(e)
+    local ref = e.config.ref_table
+    local id = e.config.ref_value
+    if not ref[id] then ref[id] = false end
+    if ref[id] == true then ref[id] = false else ref[id] = true end
+    SMODS.save_all_config()
 end
 
 function SMODS.load_mod_config(mod)
@@ -1567,6 +1597,7 @@ function create_UIBox_mods_button()
 end
 
 -- New management tab functions
+-- Currently inactive
 G.FUNCS.disable_all_mods = function(e)
     G.SETTINGS.paused = true
     G.FUNCS.overlay_menu{
@@ -1705,36 +1736,28 @@ G.FUNCS.reload_all_mods = function(e)
 end
 
 G.FUNCS.confirm_disable_all = function(e)
-    -- Disable all mods
+    -- Disable all unlocked mods
     for _, mod in ipairs(SMODS.mod_list) do
-        if not mod.locked then 
+        if not SMODS.config.locked_mods[mod.id] then 
             mod.should_enable = false
             NFS.write(mod.path .. '.lovelyignore', '')
         end
     end
     
-    -- SMODS.full_restart = 1
-    -- G.FUNCS.exit_mods(e)
+    SMODS.full_restart = 1
 end
 
 G.FUNCS.confirm_enable_all = function(e)
-    -- Disable all mods
+    -- Enable all unlocked mods
     for _, mod in ipairs(SMODS.mod_list) do
-        if not mod.locked then 
+        if not SMODS.config.locked_mods[mod.id] then 
             mod.should_enable = true
             NFS.remove(mod.path .. '.lovelyignore')
         end
     end
-    
-    -- SMODS.full_restart = 1
-    -- G.FUNCS.exit_mods(e)
+    SMODS.full_restart = 1
 end
 
-G.FUNCS.confirm_reload_all = function(e)
-    -- Just trigger a restart to reload all mods
-    SMODS.full_restart = 1
-    G.FUNCS.exit_mods(e)
-end
 
 G.FUNCS.update_achievement_settings = function(e)
     local opt = (e.cycle_config or {}).current_option or 1
@@ -2078,6 +2101,7 @@ function SMODS.GUI.staticModListContent()
                                     padding = 0.05,
                                     align = "cm",
                                     r = 0.1,
+                                    maxw = 1,
                                     colour = G.C.BOOSTER,
                                     id = 'mod_count_display', 
                                     button = "openModsDirectory", 
