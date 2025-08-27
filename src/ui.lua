@@ -241,8 +241,8 @@ function create_UIBox_mods(args)
             })
         end
 
-        local create_col = function(data, entry, title)
-            print("creating col")
+        local create_col = function(data, entry, title, hide)
+            hide = hide or false
             data = data or {}
             title = title or "MISSING"
             local col = { n = G.UIT.C, config = { colour = G.C.UI.BACKGROUND_DARK, minh = 2, minw = 3, r = 1, padding = 0.2, align = "tm" }, nodes = {}}
@@ -256,15 +256,17 @@ function create_UIBox_mods(args)
                     if v.id then v = v.id end
                     add_text_node(col, v)
                 end
-            else
+                table.insert(cols, col)
+            elseif not hide then
                 add_text_node(col, "None")
+                table.insert(cols, col)
             end
-            table.insert(cols, col)
         end
 
         create_col(mod.dependencies, "str", "Dependencies")
-        create_col(mod.conflicts, "str", "Conflicts")
         create_col(mod.dependants, nil, "Dependants")
+        create_col(mod.conflicts, "str", "Conflicts", true)
+        create_col(mod.provides, "str", "Provides", true)
         
 
         return {
