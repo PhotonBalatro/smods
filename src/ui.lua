@@ -1971,6 +1971,7 @@ function SMODS.GUI.staticModListContent()
                             row(
                                 {row({
                                     col({
+                                        -- TODO Add tooltips
                                         UIBox_button({
                                             minw = 3,
                                             button = "confirm_disable_all",
