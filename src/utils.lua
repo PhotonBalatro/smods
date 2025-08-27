@@ -391,13 +391,10 @@ function SMODS.create_card(t)
     -- or should that be left to the person calling SMODS.create_card to use it correctly?
     if t.edition then _card:set_edition(t.edition) end
     if t.enhancement then _card:set_ability(G.P_CENTERS[t.enhancement]) end
-    if t.seal then _card:set_seal(t.seal) end
+    if t.seal then _card:set_seal(t.seal, nil, true) end
     if t.stickers then
         for i, v in ipairs(t.stickers) do
-            local s = SMODS.Stickers[v]
-            if not s or type(s.should_apply) ~= 'function' or s:should_apply(_card, t.area, true) then
-                SMODS.Stickers[v]:apply(_card, true)
-            end
+            _card:add_sticker(v, t.force_stickers)
         end
     end
 
@@ -1268,7 +1265,7 @@ SMODS.calculate_individual_effect = function(effect, scored_card, key, amount, f
         mult = mod_mult(hand_chips)
         hand_chips = mod_chips(old_mult)
         update_hand_text({delay = 0}, {chips = hand_chips, mult = mult})
-        scored_card:juice_up()
+        juice_card(scored_card)
         return true
     end
 
@@ -1337,6 +1334,7 @@ SMODS.calculate_individual_effect = function(effect, scored_card, key, amount, f
 
     if key == 'saved' then
         SMODS.saved = amount
+        G.GAME.saved_text = amount
         return true
     end
 
@@ -1685,6 +1683,7 @@ function SMODS.calculate_card_areas(_type, context, return_table, args)
                     for k,v in pairs(f) do flags[k] = v end
                     if flags.numerator then context.numerator = flags.numerator end
                     if flags.denominator then context.denominator = flags.denominator end
+                    if flags.cards_to_draw then context.amount = flags.cards_to_draw end
                 end
             end
         end
@@ -1705,8 +1704,9 @@ function SMODS.calculate_card_areas(_type, context, return_table, args)
                         local effects = {eval_card(card, context)}
                         local f = SMODS.trigger_effects(effects, card)
                         for k,v in pairs(f) do flags[k] = v end
-                        if flags.numerator then flags.numerator = flags.numerator end
-                        if flags.denominator then flags.denominator = flags.denominator end
+                        if flags.numerator then context.numerator = flags.numerator end
+                        if flags.denominator then context.denominator = flags.denominator end
+                        if flags.cards_to_draw then context.amount = flags.cards_to_draw end
                     end
                 end
                 goto continue
@@ -1733,6 +1733,7 @@ function SMODS.calculate_card_areas(_type, context, return_table, args)
                     for k,v in pairs(f) do flags[k] = v end
                     if flags.numerator then context.numerator = flags.numerator end
                     if flags.denominator then context.denominator = flags.denominator end
+                    if flags.cards_to_draw then context.amount = flags.cards_to_draw end
                 end
             end
             ::continue::
@@ -1845,6 +1846,7 @@ function SMODS.calculate_context(context, return_table, no_resolve)
 end
 
 function SMODS.in_scoring(card, scoring_hand)
+    if SMODS.always_scores(card) then return true end
     for _, _card in pairs(scoring_hand) do
         if card == _card then return true end
     end
@@ -2201,7 +2203,7 @@ local function insert(t, res)
         if type(v) == 'table' and type(t[k]) == 'table' then
             insert(t[k], v)
         else
-            t[k] = v
+            t[k] = true
         end
     end
 end
@@ -2222,7 +2224,7 @@ end
 G.FUNCS.can_select_from_booster = function(e)
     local card = e.config.ref_table
     local area = booster_obj and card:selectable_from_pack(booster_obj)
-    local edition_card_limit = card.edition and card.edition.card_limit or 0
+    local edition_card_limit = card.ability.card_limit
     if area and #G[area].cards < G[area].config.card_limit + edition_card_limit then
         e.config.colour = G.C.GREEN
         e.config.button = 'use_card'
@@ -2272,11 +2274,13 @@ function SMODS.get_next_vouchers(vouchers)
     return vouchers
 end
 
-function SMODS.add_voucher_to_shop(key)
+function SMODS.add_voucher_to_shop(key, dont_save)
     if key then assert(G.P_CENTERS[key], "Invalid voucher key: "..key) else
         key = get_next_voucher_key()
-        G.GAME.current_round.voucher.spawn[key] = true
-        G.GAME.current_round.voucher[#G.GAME.current_round.voucher + 1] = key
+        if not dont_save then
+            G.GAME.current_round.voucher.spawn[key] = true
+            G.GAME.current_round.voucher[#G.GAME.current_round.voucher + 1] = key
+        end
     end
     local card = Card(G.shop_vouchers.T.x + G.shop_vouchers.T.w/2,
         G.shop_vouchers.T.y, G.CARD_W, G.CARD_H, G.P_CARDS.empty, G.P_CENTERS[key],{bypass_discovery_center = true, bypass_discovery_ui = true})
@@ -2375,15 +2379,13 @@ function SMODS.seeing_double_check(hand, suit)
             for k, v in pairs(suit_tally) do
                 if hand[i]:is_suit(k) then suit_tally[k] = suit_tally[k] + 1 end
             end
-        elseif SMODS.has_any_suit(hand[i]) then
-            if hand[i]:is_suit('Clubs') and suit_tally["Clubs"] == 0 then suit_tally["Clubs"] = suit_tally["Clubs"] + 1
-            elseif hand[i]:is_suit('Diamonds') and suit_tally["Diamonds"] == 0  then suit_tally["Diamonds"] = suit_tally["Diamonds"] + 1
-            elseif hand[i]:is_suit('Spades') and suit_tally["Spades"] == 0  then suit_tally["Spades"] = suit_tally["Spades"] + 1
-            elseif hand[i]:is_suit('Hearts') and suit_tally["Hearts"] == 0  then suit_tally["Hearts"] = suit_tally["Hearts"] + 1 end
+        end
+    end
+    for i = 1, #hand do
+        if SMODS.has_any_suit(hand[i]) then
+            if hand[i]:is_suit(suit) and suit_tally[suit] == 0 then suit_tally[suit] = suit_tally[suit] + 1 end
             for k, v in pairs(suit_tally) do
-                if k ~= "Clubs" and k ~= "Diamonds" and k ~= "Hearts" and k ~= "Spades" then
-                    if hand[i]:is_suit(k) and suit_tally[k] == 0  then suit_tally[k] = suit_tally[k] + 1 end
-                end
+                if hand[i]:is_suit(k) and suit_tally[k] == 0  then suit_tally[k] = suit_tally[k] + 1 end
             end
         end
     end
@@ -2464,7 +2466,7 @@ function SMODS.info_queue_desc_from_rows(desc_nodes, empty, maxw)
   }}
 end
 
-function SMODS.destroy_cards(cards, bypass_eternal, immediate)
+function SMODS.destroy_cards(cards, bypass_eternal, immediate, skip_anim)
     if not cards[1] then
         cards = {cards}
     end
@@ -2482,6 +2484,7 @@ function SMODS.destroy_cards(cards, bypass_eternal, immediate)
             if card.base.name then
                 playing_cards[#playing_cards + 1] = card
             end
+            card.skip_destroy_animation = skip_anim
         end
     end
     
@@ -2715,7 +2718,7 @@ G.FUNCS.SMODS_scoring_calculation_function = function(e)
         if G.GAME.current_scoring_calculation.colour and operator then
             operator.children[1].config.colour = type(G.GAME.current_scoring_calculation.colour) == 'function' and G.GAME.current_scoring_calculation:colour() or G.GAME.current_scoring_calculation.colour
         end
-        if operator then operator.UIBox:recalculate() end
+        if operator and (type(G.GAME.current_scoring_calculation.colour) == 'function' or type(G.GAME.current_scoring_calculation.text) == 'function') then operator.UIBox:recalculate() end
     end
 end
 
@@ -2931,4 +2934,110 @@ function Card:is_rarity(rarity)
     rarity = rarities[rarity] or rarity
     local own_rarity = rarities[self.config.center.rarity] or self.config.center.rarity
     return own_rarity == rarity or SMODS.Rarities[own_rarity] == rarity
+end
+
+function UIElement:draw_pixellated_under(_type, _parallax, _emboss, _progress)
+    if not self.pixellated_rect or
+        #self.pixellated_rect[_type].vertices < 1 or
+        _parallax ~= self.pixellated_rect.parallax or
+        self.pixellated_rect.w ~= self.VT.w or
+        self.pixellated_rect.h ~= self.VT.h or
+        self.pixellated_rect.sw ~= self.shadow_parrallax.x or
+        self.pixellated_rect.sh ~= self.shadow_parrallax.y or
+        self.pixellated_rect.progress ~= (_progress or 1)
+    then 
+        self.pixellated_rect = {
+            w = self.VT.w,
+            h = self.VT.h,
+            sw = self.shadow_parrallax.x,
+            sh = self.shadow_parrallax.y,
+            progress = (_progress or 1),
+            fill = {vertices = {}},
+            shadow = {vertices = {}},
+            line = {vertices = {}},
+            emboss = {vertices = {}},
+            line_emboss = {vertices = {}},
+            parallax = _parallax
+        }
+        local ext_up = self.config.ext_up and self.config.ext_up*G.TILESIZE or 0
+        local totw, toth = self.VT.w*G.TILESIZE, (self.VT.h + math.abs(ext_up)/G.TILESIZE)*G.TILESIZE
+
+        local vertices = {
+            totw,toth+ext_up,
+            0, toth+ext_up,
+            0, toth+ext_up+0.5,
+            totw,toth+ext_up+0.5
+        }
+        for k, v in ipairs(vertices) do
+            if k%2 == 1 and v > totw*self.pixellated_rect.progress then v = totw*self.pixellated_rect.progress end
+            self.pixellated_rect.fill.vertices[k] = v
+            if k > 4 then
+                self.pixellated_rect.line.vertices[k-4] = v
+                if _emboss then
+                    self.pixellated_rect.line_emboss.vertices[k-4] = v + (k%2 == 0 and -_emboss*self.shadow_parrallax.y or -0.7*_emboss*self.shadow_parrallax.x)
+                end
+            end
+            if k%2 == 0 then
+                self.pixellated_rect.shadow.vertices[k] = v -self.shadow_parrallax.y*_parallax
+                if _emboss then
+                    self.pixellated_rect.emboss.vertices[k] = v + _emboss*G.TILESIZE
+                end
+            else
+                self.pixellated_rect.shadow.vertices[k] = v -self.shadow_parrallax.x*_parallax
+                if _emboss then
+                    self.pixellated_rect.emboss.vertices[k] = v
+                end
+            end
+        end
+    end
+    love.graphics.polygon("fill", self.pixellated_rect.fill.vertices)
+
+end
+
+function CardArea:count_extra_slots_used(cards)
+    local slots = #cards
+    if (self.config.type == 'joker' or self.config.type == 'hand') and not self.config.fixed_limit then
+        for _, card in ipairs(cards) do
+            slots = slots + card.ability.extra_slots_used
+        end
+    end
+    return slots
+end
+
+function SMODS.should_handle_limit(area)
+    if (area.config.type == 'joker' or area.config.type == 'hand') and not area.config.fixed_limit then
+        return true
+    end
+end
+
+function CardArea:handle_card_limit(card_limit, card_slots)
+    if SMODS.should_handle_limit(self) then
+        card_limit = card_limit or 0
+        card_slots = card_slots or 0
+        if card_limit ~= 0 then
+            G.E_MANAGER:add_event(Event({
+                trigger = 'immediate',
+                func = function()
+                    self.config.card_limit = self.config.card_limit + card_limit
+                    return true
+                end
+            }))
+        end
+        if card_slots ~= 0 then
+            G.E_MANAGER:add_event(Event({
+                trigger = 'immediate',
+                func = function()
+                    self.config.no_true_limit = true
+                    self.config.card_limit = self.config.card_limit - card_slots
+                    self.config.no_true_limit = false
+                    return true
+                end
+            }))
+            
+        end
+        if G.hand and self == G.hand and card_limit - card_slots > 0 then 
+            if G.STATE == G.STATES.SELECTING_HAND then G.FUNCS.draw_from_deck_to_hand(math.min(card_limit - card_slots, (self.config.card_limit + card_limit - card_slots) - #self.cards)) end
+            check_for_unlock({type = 'min_hand_size'})
+        end
+    end
 end
