@@ -242,6 +242,7 @@ function create_UIBox_mods(args)
         end
 
         local create_col = function(data, entry, title)
+            print("creating col")
             data = data or {}
             title = title or "MISSING"
             local col = { n = G.UIT.C, config = { colour = G.C.UI.BACKGROUND_DARK, minh = 2, minw = 3, r = 1, padding = 0.2, align = "tm" }, nodes = {}}
@@ -251,7 +252,8 @@ function create_UIBox_mods(args)
 
             if data and next(data) ~= nil then
                 for i, v in ipairs(data) do
-                    if entry then v = v[entry] end
+                    if entry and v[entry] then v = v[entry] end
+                    if v.id then v = v.id end
                     add_text_node(col, v)
                 end
             else
@@ -2065,6 +2067,7 @@ function SMODS.GUI.staticModListContent()
         }
     }
 end
+
 function SMODS.GUI.dynamicModListContent(page)
     local scale = 0.75
     local _, __, showingList, startIndex, endIndex, modsRowPerPage, modsColPerRow = recalculateModsList(page)
@@ -2094,28 +2097,16 @@ function SMODS.GUI.dynamicModListContent(page)
         local modCount = 0
         local id = 0
         local current_row = {}
-
-        local mod_list = {}
-            local unpinned_list = {}
-            for _, modInfo in ipairs(SMODS.mod_list) do
-                local list = unpinned_list
-                if SMODS.config.pinned_mods[modInfo.id] == true then
-                    list = mod_list
-                end
-                table.insert(list, modInfo)
-            end
-            for i, v in ipairs(unpinned_list) do
-                table.insert(mod_list, v)
-            end
         
         for _, condition in ipairs({
-            function(m) return not m.can_load and not m.disabled end,
-            function(m) return m.can_load and m.config_tab end,
-            function(m) return m.can_load and not m.config_tab end,
-            function(m) return m.disabled end,
+            function(m) return SMODS.config.pinned_mods[m.id] end,
+            function(m) return not m.can_load and not m.disabled and not SMODS.config.pinned_mods[m.id] end,
+            function(m) return m.can_load and m.config_tab and not SMODS.config.pinned_mods[m.id] end,
+            function(m) return m.can_load and not m.config_tab and not SMODS.config.pinned_mods[m.id] end,
+            function(m) return m.disabled and not SMODS.config.pinned_mods[m.id] end,
         }) do
             
-            for _, modInfo in ipairs(mod_list) do
+            for _, modInfo in ipairs(SMODS.mod_list) do
                 if modCount >= modsRowPerPage * modsColPerRow then break end
                 if condition(modInfo) then
                     id = id + 1
