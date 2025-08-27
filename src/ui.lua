@@ -1126,14 +1126,7 @@ local function createClickableModBox(modInfo, scale)
     if not _RELEASE_MODE and modInfo.priority then
         table.insert(label_nodes, createTextColNode(('%s%s'):format(localize('b_priority'), number_format(modInfo.priority)), scale, version_col))
     end
-    
-    local lock_icon = 3
-    local lock_colour = G.C.GREY
-    if SMODS.config.locked_mods[modInfo.id] and SMODS.config.locked_mods[modInfo.id] == true then 
-        lock_icon = 4
-        lock_colour = G.C.ORANGE
 
-    end
 
     return {
         n = G.UIT.C,
@@ -1178,26 +1171,56 @@ local function createClickableModBox(modInfo, scale)
                             {
                                 n = G.UIT.R,
                                 config = { 
-                                    page = "manage",
                                     padding = 0.1, 
                                     align = "cm", 
-                                    colour = lock_colour,
                                     button = "lock_mod", 
-                                    ref_table = SMODS.config.locked_mods, 
-                                    ref_value = modInfo.id, shadow = true, 
-                                    shadow_height = 0.5, r = 0.1, 
-                                    hover = true 
+                                    ref_table = SMODS.config.pinned_mods, 
+                                    ref_value = modInfo.id, 
+                                    shadow = true, 
+                                    shadow_height = 0.5, 
+                                    r = 0.1, 
+                                    hover = true,
+                                    func = "lock_mod_styles",
+                                    data = {colours = {off = G.C.GREY, on = G.C.RED}, atlas_pos = {off = 5, on = 6}}
                                 },
                                 nodes = {
                                     {
                                         n = G.UIT.O,
                                         config = {
-                                            object = Sprite(0,0,0.3,0.3, G.ASSET_ATLAS['mod_tags'], {x=lock_icon,y=0})
+                                            object = Sprite(0,0,0.3,0.3, G.ASSET_ATLAS['mod_tags'], {x=0,y=0})
+                                        }
+                                    }
+                                }
+                            },
+                            {
+                                n = G.UIT.R,
+                                config = { 
+                                    padding = 0.1, 
+                                    align = "cm", 
+                                    button = "lock_mod", 
+                                    ref_table = SMODS.config.locked_mods, 
+                                    ref_value = modInfo.id, 
+                                    shadow = true, 
+                                    shadow_height = 0.5, 
+                                    r = 0.1, 
+                                    hover = true,
+                                    func = "lock_mod_styles",
+                                },
+                                nodes = {
+                                    {
+                                        n = G.UIT.O,
+                                        config = {
+                                            object = Sprite(0,0,0.3,0.3, G.ASSET_ATLAS['mod_tags'], {x=0,y=0})
                                         }
                                     }
                                 }
                             }
                         }
+                    },
+                    {
+                        n = G.UIT.C,
+                        config = {},
+                        nodes = {}
                     },
                     {
                         n = G.UIT.C,
@@ -1253,21 +1276,37 @@ function G.FUNCS.mods_buttons_page(options)
 end
 
 function G.FUNCS.lock_mod(e)
-    local ref = e.config.ref_table   -- Should be SMODS.config.locked_mods
+    local ref = e.config.ref_table   -- Should be SMODS.config.locked_mods or SMODS.config.pinned_mods
     local id = e.config.ref_value
     if not ref[id] then 
         ref[id] = false 
     end
     if ref[id] == true then 
         ref[id] = false 
-        e.children[1].config.object:set_sprite_pos({x=3,y=0})
-        e.config.colour = G.C.GREY
     else 
         ref[id] = true
-        e.children[1].config.object:set_sprite_pos({x=4,y=0})
-        e.config.colour = G.C.ORANGE
     end
-    SMODS.save_all_config()
+    SMODS:save_mod_config()
+    G.FUNCS.lock_mod_styles(e)
+end
+
+function G.FUNCS.lock_mod_styles(e)
+    local colours = (e.config.data and e.config.data.colours) or {off = G.C.GREY, on = G.C.ORANGE}
+    local pos = (e.config.data and e.config.data.atlas_pos) or {off = 3, on = 4}
+
+    if not e.config.ref_table or not e.config.ref_value then return end
+    local ref = e.config.ref_table
+    local value = e.config.ref_value
+
+    local entry = "off"
+    if ref[value] == true then
+        entry = "on"
+    end
+    
+    e.children[1].config.object:set_sprite_pos({x=pos[entry],y=0})
+    e.config.colour = colours[entry]
+
+    if e.config.func then e.config.func = nil end
 end
 
 function SMODS.load_mod_config(mod)
@@ -1952,7 +1991,12 @@ function SMODS.GUI.staticModListContent()
                                 n = G.UIT.R,
                                 config = { align = "cm", padding = 0.05 },
                                 nodes = {}
-                            }, 
+                            },
+                            {
+                                n = G.UIT.R,
+                                config = { align = "cm", padding = 0.05 },
+                                nodes = {}
+                            },
                             {
                                 n = G.UIT.R,
                                 config = {
@@ -2050,6 +2094,19 @@ function SMODS.GUI.dynamicModListContent(page)
         local modCount = 0
         local id = 0
         local current_row = {}
+
+        local mod_list = {}
+            local unpinned_list = {}
+            for _, modInfo in ipairs(SMODS.mod_list) do
+                local list = unpinned_list
+                if SMODS.config.pinned_mods[modInfo.id] == true then
+                    list = mod_list
+                end
+                table.insert(list, modInfo)
+            end
+            for i, v in ipairs(unpinned_list) do
+                table.insert(mod_list, v)
+            end
         
         for _, condition in ipairs({
             function(m) return not m.can_load and not m.disabled end,
@@ -2057,7 +2114,8 @@ function SMODS.GUI.dynamicModListContent(page)
             function(m) return m.can_load and not m.config_tab end,
             function(m) return m.disabled end,
         }) do
-            for _, modInfo in ipairs(SMODS.mod_list) do
+            
+            for _, modInfo in ipairs(mod_list) do
                 if modCount >= modsRowPerPage * modsColPerRow then break end
                 if condition(modInfo) then
                     id = id + 1
