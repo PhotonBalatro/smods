@@ -80,6 +80,11 @@ function Sprite:__call(...) return self end
 AnimatedSprite = {}
 function AnimatedSprite:__call(...) return self end
 
+---@class StateSprite: AnimatedSprite
+---@overload fun(...: any): StateSprite|table
+StateSprite = {}
+function StateSprite:__call(...) return self end
+
 ---@class Blind: Moveable
 ---@overload fun(...: any): Blind|table
 Blind = {}
@@ -120,7 +125,7 @@ function Card:__call(...) return self end
 ---@param self Card
 ---@param vars_only? boolean Only return description values
 ---@return table # Becomes `loc_vars` if `vars_only` is `true`. 
----@return table? man_start Only returns if `vars_only` is `true`. 
+---@return table? main_start Only returns if `vars_only` is `true`. 
 ---@return table? main_end Only returns if `vars_only` is `true`. 
 --- Handles variables before passing into `generate_card_ui()`. 
 function Card:generate_UIBox_ability_table(vars_only) end
@@ -245,8 +250,8 @@ function get_straight(hand, min_length, skip, wrap) end
 function tally_sprite(pos, value, tooltip, suit) end
 
 ---@param _t table
----@param seed string
----@param args table|{starting_deck?: boolean, in_pool?: fun(v: any, args: table)}
+---@param seed string|number
+---@param args? table|{starting_deck?: boolean, in_pool?: fun(v: any, args: table):boolean}
 ---@return any
 ---@return string|number key
 --- Sets the seed to `seed` and randomly selects an element within `_t`.
@@ -325,3 +330,12 @@ function pseudorandom_element(_t, seed, args) end
 ---| 'Rare'
 ---| 'Uncommon'
 ---| 'Common'
+
+---@alias PlayAreas
+---| `G.play` # Area for cards played (check during scoring for cards scored)
+---| 'unscored' # Check for unscored cards during scoring
+---| `G.hand` # Area for cards held in hand
+---| `G.jokers` # Joker area
+---| `G.consumeables` # Consumable area
+---| `G.discard` # Discard area
+---| `G.deck` # Deck

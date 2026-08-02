@@ -16,7 +16,7 @@
 ---@field get_obj? fun(self: SMODS.Scoring_Calculation|table, key: string): SMODS.Scoring_Calculation|table? Returns an object if one matches the `key`.
 ---@field new? fun(self, config): SMODS.Scoring_Calculation Creates a new instance of this operator.
 ---@field key string Used to reference your calculation, mod_prefix is applied
----@field func fun(self, chips, mult, flames) Calculate your new score, flames respects animation timings
+---@field func fun(self, chips, mult, flames): number Calculate your new score, flames respects animation timings
 ---@field text? string Replaces the `X` in the UI
 ---@field colour? table HEX colour of the `text` in the UI
 ---@field replace_ui? fun(self) Return a UI node to replace the display
@@ -34,8 +34,7 @@ SMODS.Scoring_Calculation = setmetatable({}, {
 SMODS.Scoring_Calculations = {}
 
 --- Sets the current operator used on chips and mult.
----@param key string|SMODS.Scoring_Calculation The key of the scoring calculation you want to use.
----@param config table? The operator's config.
+---@param key string The key of the scoring calculation you want to use.
 function SMODS.set_scoring_calculation(key) end
 
 --- Calculates a final round score based on the current scoring calculation.
@@ -65,7 +64,7 @@ SMODS.calculate_round_score = function(flames) end
 ---@field hands? table[] Used to add custom values for different poker hands
 ---@field modify? fun(self: SMODS.Scoring_Parameter, amount: number) Alters the value of the parameter
 ---@field calc_effect? fun(self: SMODS.Scoring_Parameter, effect: table, scored_card: Card|table, key: string, amount: number, from_edition: boolean) Handle how this parameter is calculated when return from a calculate functon
----@field level_up_hand? fun(self: SMODS.Scoring_Parameter, amount: number, hand: table) Handle how to level up this parameter
+---@field level_up_hand? fun(self: SMODS.Scoring_Parameter, amount: number, hand: table, behaviour?: fun(current:number, amount:number)) Handle how to upgrade this parameter's base value for a specific poker hand. If `behaviour` is included, it must take the current base value of the parameter and `amount` as arguments, in that order, and return the desired base value of the parameter.
 
 ---@type table<string, SMODS.Scoring_Parameter|table>
 SMODS.Scoring_Parameters = {}
@@ -73,4 +72,5 @@ SMODS.Scoring_Parameters = {}
 --- Gets the value of a scoring parameter
 ---@param key string The key of the parameter
 ---@param flames boolean Flag for flame calculation - result respects animations
+---@return number
 function SMODS.get_scoring_parameter(key, flames) end

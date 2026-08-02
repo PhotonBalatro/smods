@@ -1,13 +1,14 @@
 ---@meta
 
 ---@class SMODS.Seal: SMODS.GameObject
----@field obj_buffer? Seals|string[] Array of keys to all objects registered to this class. 
+---@field obj_buffer? Seals[]|string[] Array of keys to all objects registered to this class. 
 ---@field obj_table? table<Seals|string, SMODS.Seal|table> Table of objects registered to this class. 
 ---@field loc_txt? table|{name: string|string[], text: string[]|string[][], label: string} Contains strings used for displaying text related to this object. 
 ---@field super? SMODS.GameObject|table Parent class. 
 ---@field atlas? string Key to the seal's atlas. 
 ---@field pos? table|{x: integer, y: integer} Position of the seal's sprite. 
 ---@field unlocked? boolean Sets the unlock state of the center. 
+---@field text_colour? table Colour of the label for the badge.
 ---@field badge_colour? table HEX color the seal badge uses. 
 ---@field sound? table|{} Controls the sound that plays when the seal is applied. `sound`: Key to the sound, `per`: Sound pitch, `vol`: Sound volume. 
 ---@field badge_to_key? string[] Contains keys to each seal indexed by seal badge (`key:lower()..'_seal`). 
