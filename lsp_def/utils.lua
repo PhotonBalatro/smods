@@ -57,6 +57,8 @@
 ---@field other_drawn? Card[] List of cards that just got drawn outside a blind
 ---@field using_consumeable? true Check if `true` for effects after using a Consumable.
 ---@field skip_blind? true Check if `true` for effects after skipping a blind.
+---@field skipped_blind? string Key of the blind that just got skipped
+---@field skip_to? string Key of the new upcoming blind after a skip
 ---@field playing_card_added? true Check if `true` for effects after a playing card was added into the deck.
 ---@field card_added? true Check if `true` for effects after a non-playing card was added into the deck.
 ---@field check_enhancement? true Check if `true` for applying quantum enhancements.
@@ -134,7 +136,7 @@
 ---@field ref_table? table Used in scaling/resetting contexts as the table containing the affected value.
 ---@field ref_value? string Used in scaling/resetting contexts as the key of the affected value.
 ---@field value? number Used in scaling context as the current (unscaled) affected value.
----@field initial_value number Used in resetting context as the initial affected value.
+---@field initial_value? number Used in resetting context as the initial affected value.
 ---@field scalar_table? table Used in scaling context as the table containing the scalar value.
 ---@field scalar_value? string Used in scaling context as the key of the scalar value.
 ---@field scalar? number Used in scaling context as the current scalar value.
@@ -145,6 +147,7 @@
 ---@field scaling_message? table Used in scaling context as message that will be displayed when the operation has been performed.
 ---@field reset_message? table Used in resetting context as message that will be displayed when the operation has been performed.
 ---@field no_message? true Used in scaling/resetting contexts. If `true`, no message will be displayed when the operation has been performed.
+---@field drawing_to_play_area? true Check if `true` for effects before cards are moved to the play area for scoring.
 
 --- Util Functions
 
@@ -303,6 +306,11 @@ function SMODS.has_enhancement(card, key) end
 ---@param context CalcContext|table
 --- Calculates quantum Enhancements. Require `SMODS.optional_features.quantum_enhancements` to be `true`.
 function SMODS.calculate_quantum_enhancements(card, effects, context) end
+
+---@param card Card|table
+---@param key string
+--- Check if the card has an enhancement, edition, seal or sticker with the given property.
+function SMODS.has_playing_card_property(card, key) end
 
 ---@param card Card|table
 ---@return boolean?
@@ -464,7 +472,9 @@ function SMODS.find_card(key, count_debuffed) end
 ---@field front? string|false Front of the playing card. Ignores rank and suit.
 ---@field enhanced_poll? number Chance to pick 'Base' over 'Enhanced' with set 'Playing Card'.
 ---@field silent? true|{edition?:true, seal?:true} Applies edition and/or seal silently
+---@field immediate? true|{edition?:true, seal?:true} Applies edition and/or seal immediately
 ---@field attributes? string[] Creates a card with these attributes. All other arguments will be passed to SMODS.poll_object
+---@field scale? {w?:number, h?:number} Creates a card scaled by these width and height multipliers (each defaults to 1)
 
 ---@param t CreateCard|table
 ---@return Card|table
@@ -716,7 +726,7 @@ function SMODS.is_playing_card(card) end
 function SMODS.pinch_and_remove(card, args) end
 
 ---@param cards Card|Card[]
----@param args? {bypass_eternal?: boolean, immediate?: boolean, pinch_anim?: boolean, colours?: table<integer, table>[], silent?: boolean, delay?: number, destroy_func?: fun(card: Card, args: table<>)}
+---@param args? {bypass_eternal?: boolean, immediate?: boolean, pinch_anim?: boolean, colours?: table<integer, table>[], silent?: boolean, delay?: number, destroy_func?: fun(card: Card, args: table), skip_calc?: boolean}
 ---@param ... ... Old signature arguments in the above order, up to and including colours
 ---@return Card[] destroy_queued
 --- Destroys the cards passed to the function, handling calculation events that need to happen.
@@ -817,7 +827,7 @@ function SMODS.get_context_evaluee(stack_index) end
 
 ---@param previous_context boolean? Whether or not to check the current context's previous evaluee, skipped if this is true.
 --- Returns the previous evaluee, first checking the current SMODS.context_stack entry's previous evaluee and then checking the previous entry's latest evaluee.
-function SMODS.get_previous_evaluee() end
+function SMODS.get_previous_evaluee(previous_context) end
 
 ---@return CalcContext|table|nil
 --- Returns the second to last context from the SMODS.context_stack.
@@ -862,10 +872,16 @@ function SMODS.get_atlas(atlas_key) end
 --- This function returns the Sprite or the AnimatedSprite class depending on the atlas type
 function SMODS.get_atlas_sprite_class(atlas_key) end
 
----@param ... any The same parameters as Sprite() takes individually. The atlas may be an atlas_key instead.
+---@param X number X position
+---@param Y number Y position
+---@param W number Width scale
+---@param H number Height scale
+---@param atlas SMODS.Atlas|table|string Atlas for the sprite. It can be the atlas' key.
+---@param pos? {x?: integer, y?: integer, v: number} Position of the sprite in the atlas
+---@param sprite_args? table
 ---@return Sprite|AnimatedSprite|table
 --- This function creates a Sprite or AnimatedSprite depending on the atlas passed
-function SMODS.create_sprite(X, Y, W, H, atlas, pos) end
+function SMODS.create_sprite(X, Y, W, H, atlas, pos, sprite_args) end
 
 ---@param key string The key or name of the Blind to check
 ---@param ignore_disabled? boolean Whether to ignore the Blind being disabled
@@ -967,3 +983,12 @@ function SMODS.card_to_image(card, scale, filename) end
 ---@param bypass_debuff boolean? Whether to ignore the card's debuff status
 ---@return boolean
 function Card.is_suit_shade(card, shade, bypass_debuff) end
+
+---Process element passed via loc_vars' `vars.elements` table
+---@param element? UINode | Node | table | nil | fun(): UINode | Node | table | nil
+---@return UINode | nil
+function SMODS.process_loc_element(element) end
+
+--- Returns if the current ante would have a showdown boss blind.
+---@return boolean
+function SMODS.is_showdown_ante() end
